@@ -57,6 +57,17 @@ pub enum Error {
     CsvDecodingError(CsvDecodingError),
     /// An error occurred when parsing an XML file, such as a TMX or TSX file.
     XmlDecodingError(xml::reader::Error),
+    #[cfg(feature = "world")]
+    /// An error occurred when attempting to deserialize a JSON file.
+    JsonDecodingError(serde_json::Error),
+    #[cfg(feature = "world")]
+    /// Filename does not match any pattern in the world file.
+    NoMatchFound {
+        /// The filename that was not matched.
+        path: String,
+    },
+    /// A parameter is out of range or results in arithmetic underflow or overflow.
+    RangeError(String),
     /// The XML stream ended before the document was fully parsed.
     PrematureEnd(String),
     /// The path given is invalid because it isn't contained in any folder.
@@ -120,6 +131,13 @@ impl fmt::Display for Error {
             Error::Base64DecodingError(e) => write!(fmt, "{}", e),
             Error::CsvDecodingError(e) => write!(fmt, "{}", e),
             Error::XmlDecodingError(e) => write!(fmt, "{}", e),
+            #[cfg(feature = "world")]
+            Error::JsonDecodingError(e) => write!(fmt, "{}", e),
+            #[cfg(feature = "world")]
+            Error::NoMatchFound { path } => {
+                write!(fmt, "No match found for path: '{}'", path)
+            }
+            Error::RangeError(e) => write!(fmt, "Range error: {}", e),
             Error::PrematureEnd(e) => write!(fmt, "{}", e),
             Error::PathIsNotFile => {
                 write!(

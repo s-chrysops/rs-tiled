@@ -5,6 +5,9 @@ use crate::{
     Tileset,
 };
 
+#[cfg(feature = "world")]
+use crate::World;
+
 /// A type used for loading [`Map`]s and [`Tileset`]s.
 ///
 /// Internally, it holds a [`ResourceCache`] that, as its name implies, caches intermediate loading
@@ -180,6 +183,18 @@ impl<Cache: ResourceCache, Reader: ResourceReader> Loader<Cache, Reader> {
     /// in this context it is not an intermediate object.
     pub fn load_tsx_tileset(&mut self, path: impl AsRef<Path>) -> Result<Tileset> {
         crate::parse::xml::parse_tileset(path.as_ref(), &mut self.reader, &mut self.cache)
+    }
+
+    #[cfg(feature = "world")]
+    /// Parses a file hopefully containing a Tiled world.
+    ///
+    /// The returned [`World`] provides the deserialized data from the world file. It does not load
+    /// any maps or tilesets.
+    /// ## Note
+    /// The ['WorldPattern`] struct provides [`WorldPattern::match_path`] and [`WorldPattern::match_paths`]
+    /// as utility functions to test paths and return parsed [`WorldMap`]s.
+    pub fn load_world(&mut self, path: impl AsRef<Path>) -> Result<World> {
+        crate::world::parse_world(path.as_ref(), &mut self.reader)
     }
 
     /// Returns a reference to the loader's internal [`ResourceCache`].

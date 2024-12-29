@@ -68,6 +68,63 @@ fn test_external_tileset() {
     compare_everything_but_sources(&r, &e);
 }
 
+#[cfg(feature = "world")]
+#[test]
+fn test_world() {
+    let mut loader = Loader::new();
+
+    let e = loader.load_world("assets/world/world_basic.world").unwrap();
+
+    assert_eq!(e.maps[0].filename, "map01.tmx");
+    assert_eq!(e.maps[1].x, 960);
+    assert_eq!(e.maps[1].y, 0);
+    assert_eq!(e.maps[1].width, Some(960));
+    assert_eq!(e.maps[1].height, Some(640));
+    assert_eq!(e.maps.len(), 2);
+}
+
+#[cfg(feature = "world")]
+#[test]
+fn test_world_pattern() {
+    let mut loader = Loader::new();
+
+    let e = loader
+        .load_world("assets/world/world_pattern.world")
+        .unwrap();
+
+    assert_eq!(e.source, PathBuf::from("assets/world/world_pattern.world"));
+    assert_eq!(e.maps.len(), 0);
+    assert_eq!(e.patterns.len(), 3);
+
+    let map1 = e.match_path("map-x04-y04-plains.tmx").unwrap();
+
+    assert_eq!(map1.filename, "map-x04-y04-plains.tmx");
+    assert_eq!(map1.x, 2800);
+    assert_eq!(map1.y, 1680);
+
+    let map2 = e
+        .match_path(PathBuf::from("assets/overworld-x02-y02.tmx"))
+        .unwrap();
+
+    assert_eq!(map2.filename, "assets/overworld-x02-y02.tmx");
+    // Test to determine if we correctly hit the second pattern
+    assert_eq!(map2.x, 5472);
+
+    let paths = vec!["bad_map.tmx", "OVERFLOW-x099-y099.tmx"];
+
+    let errors = vec![
+        "No match found for path: 'bad_map.tmx'",
+        "Range error: Capture x * multiplierX causes overflow",
+    ];
+
+    let matches = e.match_paths(&paths);
+
+    for (index, result) in matches.iter().enumerate() {
+        assert_eq!(result.is_err(), true);
+        assert_eq!(result.as_ref().err().unwrap().to_string(), errors[index]);
+    }
+}
+
 #[test]
 fn test_cache() {
     let mut loader = Loader::new();
